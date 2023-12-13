@@ -1,13 +1,12 @@
 """Given a reference geometry and a detection geometry, calculate intersection over union and write it to .txt file"""
 import arcpy
 import os
-import re
 
 # Paths
-reference_data = r"D:\wsf-sat\data\validation\Harz_Freiflaeche_Totholz_2018_2021\Harz_Freifl_Totholz_2020_ni.shp"
-detection_folder = r"D:\wsf-sat\methods\validation\intersect_over_union_rf\input_detection\harz_2020"
-output_folder = r"D:\wsf-sat\methods\validation\intersect_over_union_rf\output\harz_2020"
-id_detection = "harz_2020"
+reference_data = r"D:\wsf-sat\data\validation\Harz_Freiflaeche_Totholz_2018_2022\Harz_Freifl_Totholz_2018_2022_025ha_fix_ni_dissolve_npharz_clip_basisdlm2019.shp"
+detection_folder = r"D:\wsf-sat\methods\detection\threshold_nbr\nbr_threshold_m12_postprocessing_2018_2022_harz"
+output_folder = r"D:\wsf-sat\methods\validation\intersection_over_union_nbr_diff_gee"
+id_detection = "detection_nbr_m12_gee_postprocessing_2018_2022_harz"
 
 if not os.path.isdir(os.path.join(output_folder, "IntersectOverUnion.gdb")):
     arcpy.CreateFileGDB_management(output_folder, "IntersectOverUnion")
@@ -23,7 +22,6 @@ detection_files = [os.path.join(root, name)
                    if name.endswith(".shp")]
 detection_files = [file for file in detection_files if not "temp" in file]  # filter temp files
 print(list(map(os.path.basename, detection_files)))
-
 
 # Create textfile to write results
 if not os.path.isfile(os.path.join(output_folder, "results.txt")):
@@ -50,7 +48,7 @@ for detection_file in detection_files:
                               statistics_fields="Shape_Area SUM")
     print(f"Fertig {detection_file}")
 
-# Get values and write in table
+    # Get values and write in table
     with arcpy.da.UpdateCursor(f"intersect_{id_detection}_area_sum", ["SUM_Shape_Area"]) as cursor:
         for row in cursor:
             area_sum_intersect = row[0]
@@ -62,10 +60,8 @@ for detection_file in detection_files:
             print(area_sum_union)
 
     with open(os.path.join(output_folder, "results.txt"), "a") as a:
-        intersection_over_union = round(area_sum_intersect/area_sum_union * 100, 2)
+        intersection_over_union = round(area_sum_intersect / area_sum_union, 2)
         print(intersection_over_union)
-        a.write(" ".join([id_detection, str(area_sum_intersect/10000),
-                          str(area_sum_union/10000), str(intersection_over_union)]) +"\n")
+        a.write(" ".join([id_detection, str(area_sum_intersect / 10000),
+                          str(area_sum_union / 10000), str(intersection_over_union)]) + "\n")
         a.close()
-
-
